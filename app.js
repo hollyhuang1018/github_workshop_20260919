@@ -8,12 +8,37 @@ const themeToggle = document.getElementById('theme-toggle');
 const themeIcon = themeToggle.querySelector('.theme-icon');
 const themeText = themeToggle.querySelector('.theme-text');
 const filterButtons = document.querySelectorAll('.filter-btn');
+const FILTER_STORAGE_KEY = 'todo-current-filter';
+const validFilters = ['all', 'active', 'completed'];
 
 // 預設篩選為全部，並記錄目前的篩選狀態。
 let currentFilter = 'all';
 
 // 待辦資料保存在記憶體中，這個版本不使用 localStorage。
 let todos = [];
+
+// 讀取使用者上一次的篩選條件，若資料損壞則安全回退成全部。
+function getStoredFilter() {
+  try {
+    const storedFilter = localStorage.getItem(FILTER_STORAGE_KEY);
+    return validFilters.includes(storedFilter) ? storedFilter : 'all';
+  } catch (error) {
+    return 'all';
+  }
+}
+
+// 將目前篩選條件存回 localStorage。
+function saveFilterPreference(filterValue) {
+  if (!validFilters.includes(filterValue)) {
+    return;
+  }
+
+  try {
+    localStorage.setItem(FILTER_STORAGE_KEY, filterValue);
+  } catch (error) {
+    // 忽略localStorage失敗，避免影響主要功能。
+  }
+}
 
 // 偵測作業系統的深淺色偏好；若使用者從未手動切換，就以此為初始值。
 let currentTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -145,10 +170,12 @@ function addTodo(event) {
 
 // 切換篩選狀態，並更新目前選中的按鈕樣式。
 function setFilter(filterValue) {
-  currentFilter = filterValue;
+  const safeFilter = validFilters.includes(filterValue) ? filterValue : 'all';
+  currentFilter = safeFilter;
+  saveFilterPreference(safeFilter);
 
   filterButtons.forEach((button) => {
-    const isActive = button.dataset.filter === filterValue;
+    const isActive = button.dataset.filter === safeFilter;
     button.classList.toggle('active', isActive);
     button.setAttribute('aria-pressed', String(isActive));
   });
@@ -172,6 +199,9 @@ filterButtons.forEach((button) => {
 // 表單送出時新增待辦事項。
 todoForm.addEventListener('submit', addTodo);
 
+// 頁面載入時還原上次選擇的篩選條件，避免重新整理後回到全部。
+currentFilter = getStoredFilter();
+
 // 頁面載入時初始設定主題與渲染清單。
 applyTheme(currentTheme);
-renderTodos();
+setFilter(currentFilter);
