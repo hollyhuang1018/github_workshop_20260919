@@ -50,6 +50,19 @@ function updateCount() {
   todoCount.textContent = `未完成: ${remainingCount} 項`;
 }
 
+// 產生篩選結果為空時的提示文字，讓使用者知道問題是被篩選條件遮住，不是被刪除。
+function getEmptyStateMessage() {
+  if (currentFilter === 'active') {
+    return '目前沒有未完成的待辦事項。切換回「全部」或「已完成」可查看其他項目。';
+  }
+
+  if (currentFilter === 'completed') {
+    return '目前沒有已完成的待辦事項。這筆項目只是被目前篩選條件過濾掉，並沒有被刪除。';
+  }
+
+  return '還沒有任何待辦事項,新增一個吧!';
+}
+
 // 根據篩選結果更新清單與空狀態文字。
 function renderTodos() {
   const filteredTodos = getFilteredTodos();
@@ -57,14 +70,7 @@ function renderTodos() {
 
   if (filteredTodos.length === 0) {
     emptyState.classList.add('visible');
-
-    if (currentFilter === 'active') {
-      emptyState.textContent = '目前沒有未完成的待辦事項';
-    } else if (currentFilter === 'completed') {
-      emptyState.textContent = '目前沒有已完成的待辦事項';
-    } else {
-      emptyState.textContent = '還沒有任何待辦事項,新增一個吧!';
-    }
+    emptyState.textContent = getEmptyStateMessage();
   } else {
     emptyState.classList.remove('visible');
   }
