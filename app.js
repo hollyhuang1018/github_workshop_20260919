@@ -1,37 +1,75 @@
-// 這個檔案負責管理待辦清單的資料、渲染與事件處理。
-const STORAGE_KEY = 'todo-list-items';
-
+// 這個檔案負責管理待辦清單的資料、渲染、篩選與深色模式切換。
 const todoForm = document.getElementById('todo-form');
 const todoInput = document.getElementById('todo-input');
 const todoList = document.getElementById('todo-list');
 const todoCount = document.getElementById('todo-count');
 const emptyState = document.getElementById('empty-state');
+const themeToggle = document.getElementById('theme-toggle');
+const themeIcon = themeToggle.querySelector('.theme-icon');
+const themeText = themeToggle.querySelector('.theme-text');
+const filterButtons = document.querySelectorAll('.filter-btn');
 
-// 從 localStorage 讀取資料，若不存在則回傳空陣列。
-let todos = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+// 預設篩選為全部，並記錄目前的篩選狀態。
+let currentFilter = 'all';
 
-// 儲存待辦資料到 localStorage。
-function saveTodos() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+// 待辦資料保存在記憶體中，這個版本不使用 localStorage。
+let todos = [];
+
+// 偵測作業系統的深淺色偏好；若使用者從未手動切換，就以此為初始值。
+let currentTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+
+// 依照目前主題，更新 HTML 的 data-theme 屬性與按鈕文字。
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+
+  if (theme === 'dark') {
+    themeIcon.textContent = '☀️';
+    themeText.textContent = '淺色模式';
+  } else {
+    themeIcon.textContent = '🌙';
+    themeText.textContent = '深色模式';
+  }
 }
 
-// 重新計算並更新未完成項目數量。
+// 依照目前篩選條件回傳符合條件的待辦項目。
+function getFilteredTodos() {
+  switch (currentFilter) {
+    case 'active':
+      return todos.filter((todo) => !todo.completed);
+    case 'completed':
+      return todos.filter((todo) => todo.completed);
+    case 'all':
+    default:
+      return todos;
+  }
+}
+
+// 重新計算並更新未完成項目數量，這個數字不受篩選影響。
 function updateCount() {
   const remainingCount = todos.filter((todo) => !todo.completed).length;
   todoCount.textContent = `未完成: ${remainingCount} 項`;
 }
 
-// 根據 todos 陣列，更新畫面上的清單與空狀態。
+// 根據篩選結果更新清單與空狀態文字。
 function renderTodos() {
+  const filteredTodos = getFilteredTodos();
   todoList.innerHTML = '';
 
-  if (todos.length === 0) {
+  if (filteredTodos.length === 0) {
     emptyState.classList.add('visible');
+
+    if (currentFilter === 'active') {
+      emptyState.textContent = '目前沒有未完成的待辦事項';
+    } else if (currentFilter === 'completed') {
+      emptyState.textContent = '目前沒有已完成的待辦事項';
+    } else {
+      emptyState.textContent = '還沒有任何待辦事項,新增一個吧!';
+    }
   } else {
     emptyState.classList.remove('visible');
   }
 
-  todos.forEach((todo) => {
+  filteredTodos.forEach((todo) => {
     const item = document.createElement('li');
     item.className = `todo-item${todo.completed ? ' completed' : ''}`;
 
@@ -56,14 +94,15 @@ function renderTodos() {
 
     checkbox.addEventListener('change', () => {
       todo.completed = checkbox.checked;
-      saveTodos();
       renderTodos();
     });
 
     deleteBtn.addEventListener('click', () => {
-      todos = todos.filter((itemTodo) => itemTodo.id !== todo.id);
-      saveTodos();
-      renderTodos();
+      const index = todos.findIndex((itemTodo) => itemTodo.id === todo.id);
+      if (index !== -1) {
+        todos.splice(index, 1);
+        renderTodos();
+      }
     });
 
     main.appendChild(checkbox);
@@ -95,12 +134,38 @@ function addTodo(event) {
 
   todoInput.value = '';
   todoInput.focus();
-  saveTodos();
   renderTodos();
 }
 
-// 監聽表單送出與輸入欄位 Enter 按鍵。
+// 切換篩選狀態，並更新目前選中的按鈕樣式。
+function setFilter(filterValue) {
+  currentFilter = filterValue;
+
+  filterButtons.forEach((button) => {
+    const isActive = button.dataset.filter === filterValue;
+    button.classList.toggle('active', isActive);
+    button.setAttribute('aria-pressed', String(isActive));
+  });
+
+  renderTodos();
+}
+
+// 點擊切換深色 / 淺色模式，依照目前狀態更新 UI。
+themeToggle.addEventListener('click', () => {
+  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  applyTheme(currentTheme);
+});
+
+// 篩選按鈕點選事件。
+filterButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    setFilter(button.dataset.filter);
+  });
+});
+
+// 表單送出時新增待辦事項。
 todoForm.addEventListener('submit', addTodo);
 
-// 初始渲染。
+// 頁面載入時初始設定主題與渲染清單。
+applyTheme(currentTheme);
 renderTodos();
