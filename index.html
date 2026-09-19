@@ -40,8 +40,16 @@
           還沒有任何待辦事項,新增一個吧!
         </p>
 
-        <div class="summary">
+        <div class="summary" aria-live="polite">
           <span id="todo-count">未完成: 0 項</span>
+          <button
+            id="clear-completed-btn"
+            class="clear-completed-btn hidden"
+            type="button"
+            aria-label="清除所有已完成的待辦事項"
+          >
+            清除已完成
+          </button>
         </div>
       </section>
     </main>
