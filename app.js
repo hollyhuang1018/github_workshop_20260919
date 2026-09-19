@@ -4,16 +4,35 @@ const todoInput = document.getElementById('todo-input');
 const todoList = document.getElementById('todo-list');
 const todoCount = document.getElementById('todo-count');
 const emptyState = document.getElementById('empty-state');
+const clearCompletedBtn = document.getElementById('clear-completed-btn');
 const themeToggle = document.getElementById('theme-toggle');
 const themeIcon = themeToggle.querySelector('.theme-icon');
 const themeText = themeToggle.querySelector('.theme-text');
 const filterButtons = document.querySelectorAll('.filter-btn');
+const STORAGE_KEY = 'todo-list-items';
 
 // 預設篩選為全部，並記錄目前的篩選狀態。
 let currentFilter = 'all';
 
-// 待辦資料保存在記憶體中，這個版本不使用 localStorage。
+// 待辦資料保存在記憶體中，並同步到 localStorage。
 let todos = [];
+
+function loadTodos() {
+  try {
+    const storedTodos = localStorage.getItem(STORAGE_KEY);
+    return storedTodos ? JSON.parse(storedTodos) : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function saveTodos() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+  } catch (error) {
+    // 忽略儲存失敗，避免影響主要待辦功能。
+  }
+}
 
 // 偵測作業系統的深淺色偏好；若使用者從未手動切換，就以此為初始值。
 let currentTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -48,6 +67,16 @@ function getFilteredTodos() {
 function updateCount() {
   const remainingCount = todos.filter((todo) => !todo.completed).length;
   todoCount.textContent = `未完成: ${remainingCount} 項`;
+}
+
+// 根據是否有已完成項目更新清除按鈕狀態。
+function updateClearCompletedButton() {
+  const completedCount = todos.filter((todo) => todo.completed).length;
+  const hasCompleted = completedCount > 0;
+
+  clearCompletedBtn.classList.toggle('hidden', !hasCompleted);
+  clearCompletedBtn.disabled = !hasCompleted;
+  clearCompletedBtn.setAttribute('aria-label', `清除所有 ${completedCount} 筆已完成的待辦事項`);
 }
 
 // 產生篩選結果為空時的提示文字，讓使用者知道問題是被篩選條件遮住，不是被刪除。
@@ -100,6 +129,7 @@ function renderTodos() {
 
     checkbox.addEventListener('change', () => {
       todo.completed = checkbox.checked;
+      saveTodos();
       renderTodos();
     });
 
@@ -107,6 +137,7 @@ function renderTodos() {
       const index = todos.findIndex((itemTodo) => itemTodo.id === todo.id);
       if (index !== -1) {
         todos.splice(index, 1);
+        saveTodos();
         renderTodos();
       }
     });
@@ -119,6 +150,7 @@ function renderTodos() {
   });
 
   updateCount();
+  updateClearCompletedButton();
 }
 
 // 新增待辦事件：忽略空白內容，避免新增空白項目。
@@ -138,8 +170,27 @@ function addTodo(event) {
     completed: false,
   });
 
+  saveTodos();
   todoInput.value = '';
   todoInput.focus();
+  renderTodos();
+}
+
+function clearCompletedTodos() {
+  const completedCount = todos.filter((todo) => todo.completed).length;
+
+  if (completedCount === 0) {
+    return;
+  }
+
+  const shouldDelete = window.confirm('確定要清除所有已完成的待辦事項嗎？');
+
+  if (!shouldDelete) {
+    return;
+  }
+
+  todos = todos.filter((todo) => !todo.completed);
+  saveTodos();
   renderTodos();
 }
 
@@ -169,9 +220,12 @@ filterButtons.forEach((button) => {
   });
 });
 
+clearCompletedBtn.addEventListener('click', clearCompletedTodos);
+
 // 表單送出時新增待辦事項。
 todoForm.addEventListener('submit', addTodo);
 
 // 頁面載入時初始設定主題與渲染清單。
+todos = loadTodos();
 applyTheme(currentTheme);
 renderTodos();

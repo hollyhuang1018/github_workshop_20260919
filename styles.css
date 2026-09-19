@@ -267,7 +267,35 @@ h1 {
   border-top: 1px solid var(--border-color);
   font-size: 0.98rem;
   color: var(--muted-color);
-  text-align: right;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.clear-completed-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: var(--danger-color-soft);
+  color: var(--danger-color);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+}
+
+.clear-completed-btn:hover:not(:disabled) {
+  background: var(--danger-color);
+  color: #fff;
+}
+
+.clear-completed-btn.hidden {
+  display: none;
+}
+
+.clear-completed-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .empty-state {
