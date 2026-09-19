@@ -1,26 +1,29 @@
-# Copilot 協作規範
+# 專案說明:待辦清單 App
 
-## 技術限制
-- 這是純前端專案，僅使用 HTML、CSS、原生 JavaScript。
-- 禁止引入任何框架或套件，例如 React、Vue、jQuery、Bootstrap、Tailwind。
-- 不要建立 package.json，也不要執行 npm install。
-- 不要引用任何外部 CDN，必須能離線運作。
-- 檔案結構固定為根目錄下的 index.html、styles.css、app.js。
+這是一個 GitHub Copilot 工作坊的教學專案。請在協助我時遵守以下規則。
+
+## 技術限制(重要)
+
+- **純前端**:只使用 HTML、CSS、原生 JavaScript。
+- **禁止引入任何框架或套件**:不要用 React、Vue、jQuery、Tailwind、Bootstrap,也不要建立 `package.json` 或執行 `npm install`。
+- **不要引入任何 CDN 外部資源**,所有程式碼都要能離線運作。
+- 檔案結構固定為根目錄的 `index.html`、`styles.css`、`app.js`,不要任意新增或搬移檔案。
 
 ## 程式風格
-- 註解一律使用繁體中文。
+
+- 註解一律使用**繁體中文**。
 - 變數與函式命名使用英文 camelCase。
-- CSS 顏色一律使用 :root 定義的 CSS 變數，不要在各處寫死色碼。
-- 使用 const / let，不要使用 var。
-- 產生 DOM 內容時，優先使用 textContent 或 createElement，不要用 innerHTML 組字串。
-- 程式碼要保持簡潔、可讀，並符合純前端的最小依賴原則。
+- CSS 顏色一律使用 `:root` 內定義的 CSS 變數,不要在各處寫死色碼。
+- JavaScript 使用 `const` / `let`,不要用 `var`。
+- 產生 DOM 內容時使用 `textContent` 或 `createElement`,**不要用 `innerHTML` 組字串**(避免 XSS)。
 
 ## 協作方式
-- 動手改之前，先條列說明打算改哪些檔案、做什麼變動，等確認後再開始實作。
-- 一次只處理一件事，不要順手做未被要求的重構或額外功能。
-- 任何修改都要保持專案的目標一致，避免引入不必要的複雜度。
-- 改完後，需說明要怎麼在瀏覽器中驗證這次變更是否正確。
 
-## 驗證要求
-- 如有使用者要求功能調整，完成後需提供簡短的驗證步驟。
-- 驗證方式應以瀏覽器直接開啟頁面為主，強調離線可用與純前端適用情境。
+- **動手改之前,先用條列式說明你打算改哪些檔案、做什麼變動,等我確認後再開始。**
+- 一次只處理一件事,不要順手做我沒要求的重構。
+- 改完後,請告訴我**要怎麼在瀏覽器中驗證**這次的修改。
+
+## 無障礙
+
+- 互動元素要有適當的 `aria-label`。
+- 保持鍵盤可操作(Tab 可聚焦、Enter 可送出)。
